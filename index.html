@@ -24,6 +24,7 @@
   }
   header{
     padding:56px 48px 32px;
+    text-align:center;
   }
   h1{
     font-family:'Archivo',sans-serif;
@@ -46,7 +47,11 @@
     font-size:15px;
     max-width:520px;
     line-height:1.55;
-    margin:0;
+    margin:0 auto;
+  }
+  .page{
+    max-width:1320px;
+    margin:0 auto;
   }
   .rule{
     border:none;
@@ -58,8 +63,8 @@
   }
   .grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
-    gap:36px 28px;
+    grid-template-columns:repeat(3,1fr);
+    gap:48px 36px;
   }
   .card{
     display:block;
@@ -82,10 +87,21 @@
   .card:hover .frame img{
     transform:scale(1.04);
   }
+  .frame.pending{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .frame.pending .placeholder{
+    color:var(--muted);
+    font-size:12.5px;
+    text-align:center;
+    padding:0 16px 40px;
+  }
   .play{
     position:absolute;
-    left:16px;bottom:16px;
-    width:36px;height:36px;
+    left:20px;bottom:20px;
+    width:46px;height:46px;
     border-radius:50%;
     background:var(--accent);
     display:flex;
@@ -93,23 +109,29 @@
     justify-content:center;
   }
   .play svg{
-    width:12px;height:12px;
+    width:15px;height:15px;
     fill:#fff;
     margin-left:2px;
   }
   .meta{
-    padding-top:14px;
+    padding-top:18px;
   }
   .meta h3{
     font-family:'Archivo',sans-serif;
     font-weight:700;
-    font-size:17px;
-    margin:0 0 4px;
+    font-size:21px;
+    margin:0 0 6px;
     letter-spacing:-0.01em;
+  }
+  .meta .role{
+    color:var(--accent);
+    font-size:14px;
+    font-weight:500;
+    margin:0 0 4px;
   }
   .meta .date{
     color:var(--muted);
-    font-size:13px;
+    font-size:14px;
     margin:0;
   }
   .empty{
@@ -132,10 +154,12 @@
 </head>
 <body>
 
+<div class="page">
+
 <header>
   <p class="eyebrow">Referenční přehled</p>
-  <h1>Předešlé práce</h1>
-  <p class="sub">Výběr předešlých prací a projektů.</p>
+  <h1>Dřívější práce</h1>
+  <p class="sub">Sbírka dřívějších prací uchovaná pro referenci. Kliknutím na náhled otevřete video.</p>
 </header>
 
 <hr class="rule">
@@ -145,32 +169,61 @@
   <p class="empty" id="empty" style="display:none;">Zatím žádné položky — přidejte je do seznamu <code>works</code> na začátku scriptu.</p>
 </main>
 
-<footer>
-  
+<footer id="footer">
+  Vlastní práce přidáte úpravou pole <code>works</code> v tomto souboru. Každá položka potřebuje obrázek <code>thumb</code>, odkaz <code>url</code> na video hostované na YouTube nebo Vimeu a pozici <code>role</code>, na které jste se podíleli.
 </footer>
 
+</div>
+
 <script>
+// Set to false to hide the footer notes on the published page
+const SHOW_FOOTER = false;
+
 // ---- Edit this list to add your own work ----
 // thumb: path or URL to a thumbnail image
 // url:   link to the video on YouTube / Vimeo
 const works = [
   {
     title: "Stream spot",
+    role: "Režie",
     date: "2023",
     thumb: "thumbs/piece-01.jpg",
     url: "https://vimeo.com/826100650"
   },
   {
     title: "Kočka není pes",
-    date: "2025",
+    role: "Dramaturg",
+    date: "2021–současnost",
     thumb: "thumbs/piece-02.jpg",
     url: "https://www.ceskatelevize.cz/porady/11535735801-kocka-neni-pes/"
   },
   {
     title: "Rozkaz zněl jasně",
-    date: "2026",
+    role: "Producent",
+    date: "2025–2026",
     thumb: "thumbs/piece-03.jpg",
-    url: "https://tn.nova.cz/video/5566-rozkaz-znel-jasne/529566-drsny-zavod-v-krkonosich-nejsme-vojaci-abychom-meli-pohodli-rikaji"
+    url: "https://tn.nova.cz/video/5566-rozkaz-znel-jasne"
+  },
+  {
+    title: "Kadeřnictví",
+    role: "Vedoucí natáčení",
+    date: "2018",
+    thumb: "thumbs/piece-04.jpg",
+    url: "https://www.stream.cz/kadernictvi"
+  },
+  {
+    title: "Znělka MFSF15",
+    role: "Režie",
+    date: "2015",
+    thumb: "thumbs/piece-05.jpg",
+    url: "https://www.youtube.com/watch?v=yT0NVFrCI_0"
+  },
+  {
+    title: "Škola mazlíčků",
+    role: "Producent",
+    date: "2024",
+    thumb: "thumbs/piece-06.jpg",
+    url: "https://www.stream.cz/skola-mazlicku"
   }
 ];
 // ----------------------------------------------
@@ -193,11 +246,12 @@ function render(){
 
     card.innerHTML = `
       <div class="frame">
-        <img src="${w.thumb}" alt="${w.title}">
+        <img src="${w.thumb}" alt="${w.title}" onerror="const f=this.closest('.frame');this.remove();f.classList.add('pending');f.insertAdjacentHTML('afterbegin','&lt;span class=&quot;placeholder&quot;&gt;Náhled zatím chybí&lt;/span&gt;')">
         <span class="play">${playIcon}</span>
       </div>
       <div class="meta">
         <h3>${w.title}</h3>
+        <p class="role">${w.role}</p>
         <p class="date">${w.date}</p>
       </div>
     `;
@@ -206,6 +260,8 @@ function render(){
 }
 
 render();
+
+document.getElementById('footer').style.display = SHOW_FOOTER ? 'block' : 'none';
 </script>
 
 </body>
