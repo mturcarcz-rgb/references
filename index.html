@@ -150,16 +150,48 @@
     padding:1px 5px;
     border-radius:3px;
   }
+  .lang-switch{
+    position:fixed;
+    top:24px;
+    right:28px;
+    z-index:10;
+    display:flex;
+    gap:2px;
+    background:#f2f1ec;
+    border-radius:20px;
+    padding:3px;
+  }
+  .lang-switch button{
+    border:none;
+    background:transparent;
+    font-family:'IBM Plex Sans',sans-serif;
+    font-weight:500;
+    font-size:12px;
+    letter-spacing:.05em;
+    color:var(--muted);
+    padding:6px 13px;
+    border-radius:16px;
+    cursor:pointer;
+  }
+  .lang-switch button.active{
+    background:var(--accent);
+    color:#fff;
+  }
 </style>
 </head>
 <body>
 
+<div class="lang-switch" id="langSwitch">
+  <button type="button" data-lang="cs">CS</button>
+  <button type="button" data-lang="en">EN</button>
+</div>
+
 <div class="page">
 
 <header>
-  <p class="eyebrow">Referenční přehled</p>
-  <h1>Dřívější práce</h1>
-  <p class="sub">Sbírka dřívějších prací uchovaná pro referenci. Kliknutím na náhled otevřete video.</p>
+  <p class="eyebrow" id="eyebrow">Referenční přehled</p>
+  <h1 id="pageTitle">Dřívější práce</h1>
+  <p class="sub" id="pageSub">Sbírka dřívějších prací uchovaná pro referenci. Kliknutím na náhled otevřete video.</p>
 </header>
 
 <hr class="rule">
@@ -228,12 +260,63 @@ const works = [
 ];
 // ----------------------------------------------
 
+// ---- Translations ----
+const ui = {
+  cs: {
+    eyebrow: "Referenční přehled",
+    title: "Dřívější práce",
+    sub: "Sbírka dřívějších prací uchovaná pro referenci. Kliknutím na náhled otevřete video.",
+    empty: 'Zatím žádné položky — přidejte je do seznamu <code>works</code> na začátku scriptu.',
+    footer: 'Vlastní práce přidáte úpravou pole <code>works</code> v tomto souboru. Každá položka potřebuje obrázek <code>thumb</code>, odkaz <code>url</code> na video hostované na YouTube nebo Vimeu a pozici <code>role</code>, na které jste se podíleli.',
+    pending: "Náhled zatím chybí"
+  },
+  en: {
+    eyebrow: "Reference board",
+    title: "Past work",
+    sub: "A collection of past work kept for reference. Click a thumbnail to open the video.",
+    empty: 'No items yet — add them to the <code>works</code> list at the top of the script.',
+    footer: 'Add your own work by editing the <code>works</code> field in this file. Each item needs a <code>thumb</code> image, a <code>url</code> link to a video hosted on YouTube or Vimeo, and the <code>role</code> you had on it.',
+    pending: "Thumbnail coming soon"
+  }
+};
+
+// Role names are translated for display; only add entries actually used above.
+const roleMap = {
+  "Režie": "Director",
+  "Dramaturg": "Story Editor",
+  "Producent": "Producer",
+  "Vedoucí natáčení": "Production Manager"
+};
+
+function translateRole(role, lang){
+  if (lang === 'cs') return role;
+  return roleMap[role] || role;
+}
+
+function translateDate(date, lang){
+  if (lang === 'cs') return date;
+  return date.replace('současnost', 'present');
+}
+
+let lang = localStorage.getItem('lang') || 'cs';
+
 const grid = document.getElementById('grid');
 const emptyMsg = document.getElementById('empty');
+const langSwitch = document.getElementById('langSwitch');
 
 const playIcon = `<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"></polygon></svg>`;
 
 function render(){
+  const t = ui[lang];
+
+  document.documentElement.lang = lang;
+  document.getElementById('eyebrow').textContent = t.eyebrow;
+  document.getElementById('pageTitle').textContent = t.title;
+  document.getElementById('pageSub').textContent = t.sub;
+  emptyMsg.innerHTML = t.empty;
+  document.getElementById('footer').innerHTML = t.footer;
+  langSwitch.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+
   grid.innerHTML = '';
   emptyMsg.style.display = works.length ? 'none' : 'block';
 
@@ -246,18 +329,26 @@ function render(){
 
     card.innerHTML = `
       <div class="frame">
-        <img src="${w.thumb}" alt="${w.title}" onerror="const f=this.closest('.frame');this.remove();f.classList.add('pending');f.insertAdjacentHTML('afterbegin','&lt;span class=&quot;placeholder&quot;&gt;Náhled zatím chybí&lt;/span&gt;')">
+        <img src="${w.thumb}" alt="${w.title}" onerror="const f=this.closest('.frame');this.remove();f.classList.add('pending');f.insertAdjacentHTML('afterbegin','&lt;span class=&quot;placeholder&quot;&gt;${t.pending}&lt;/span&gt;')">
         <span class="play">${playIcon}</span>
       </div>
       <div class="meta">
         <h3>${w.title}</h3>
-        <p class="role">${w.role}</p>
-        <p class="date">${w.date}</p>
+        <p class="role">${translateRole(w.role, lang)}</p>
+        <p class="date">${translateDate(w.date, lang)}</p>
       </div>
     `;
     grid.appendChild(card);
   });
 }
+
+langSwitch.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-lang]');
+  if (!btn || btn.dataset.lang === lang) return;
+  lang = btn.dataset.lang;
+  localStorage.setItem('lang', lang);
+  render();
+});
 
 render();
 
